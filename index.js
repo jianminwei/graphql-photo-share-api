@@ -23,8 +23,8 @@ type Mutation {
 `
 
 //A data type to store our photos in memory
-var _id = 0
-var photos = []
+let _id = 0
+let photos = []
 
 const resolvers = {
     Query: {
@@ -43,6 +43,9 @@ const resolvers = {
             // 3. Return the new photo
             return newPhoto
         }
+    },
+    Photo: {
+        url: parent => `http://yoursite.com/img/${parent.id}.jpg`
     }
 }
 
