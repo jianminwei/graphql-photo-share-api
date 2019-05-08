@@ -1,12 +1,21 @@
 const { ApolloServer } = require('apollo-server')
 
 const typeDefs = `
+enum PhotoCategory {
+    SELFIE
+    PORTRAIT
+    ACTION
+    LANDSCAPE
+    GRAPHIC
+}
+
 # 1. Add Photo type definition
 type Photo {
     id: ID!
     url: String!
     name: String!
     description: String
+    category: PhotoCategory!
 }
 
 # 2. Return Photo from allPhotos
@@ -15,14 +24,19 @@ type Query {
     allPhotos: [Photo!]!
 }
 
+input PostPhotoInput {
+    name: String!
+    category: PhotoCategory=PORTRAIT
+    description: String
+}
+
 # 3. Return the newly posted photo from the mutation
 type Mutation {
-    postPhoto(name: String! description: String): Photo!
+    postPhoto(input: PostPhotoInput!): Photo!
 }
 
 `
 
-//A data type to store our photos in memory
 let _id = 0
 let photos = []
 
@@ -34,13 +48,11 @@ const resolvers = {
 
     Mutation: {
         postPhoto(parent, args) {
-            // 2. Create a new photo, and generate an id
             var newPhoto = {
                 id: _id++,
-                ...args
+                ...args.input
             }
             photos.push(newPhoto)
-            // 3. Return the new photo
             return newPhoto
         }
     },
