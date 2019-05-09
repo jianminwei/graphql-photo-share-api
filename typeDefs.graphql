@@ -1,0 +1,49 @@
+
+scalar DateTime
+
+enum PhotoCategory {
+    SELFIE
+    PORTRAIT
+    ACTION
+    LANDSCAPE
+    GRAPHIC
+}
+
+# 1. Add Photo type definition
+type Photo {
+    id: ID!
+    url: String!
+    name: String!
+    description: String
+    category: PhotoCategory!
+    postedBy: User!
+    taggedUsers: [User!]!
+    created: DateTime!
+}
+
+type User {
+    githubLogin: ID!
+    name: String
+    avatar: String
+    postedPhotos: [Photo!]!
+    inPhotos: [Photo!]!
+}
+
+# 2. Return Photo from allPhotos
+type Query {
+    totalPhotos: Int!
+    allPhotos: [Photo!]!
+    allUsers: [User!]!
+}
+
+input PostPhotoInput {
+    name: String!
+    category: PhotoCategory=PORTRAIT
+    description: String
+}
+
+# 3. Return the newly posted photo from the mutation
+type Mutation {
+    postPhoto(input: PostPhotoInput!): Photo!
+}
+
