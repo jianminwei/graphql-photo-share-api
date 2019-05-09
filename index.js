@@ -33,6 +33,7 @@ type User {
 type Query {
     totalPhotos: Int!
     allPhotos: [Photo!]!
+    allUsers: [User!]!
 }
 
 input PostPhotoInput {
@@ -88,7 +89,8 @@ var tags = [
 const resolvers = {
     Query: {
         totalPhotos: () => photos.length,
-        allPhotos: () => photos
+        allPhotos: () => photos,
+        allUsers: () => users
     },
 
     Mutation: {
