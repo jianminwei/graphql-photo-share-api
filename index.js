@@ -123,7 +123,7 @@ const resolvers = {
         },
         inPhotos: parent => tags
             // Returns an array of tags that only contain the current user
-            .filter(tag => tag.userID === parent.id)
+            .filter(tag => tag.userID === parent.githubLogin)
             // Converts the array of tags into an array of photoIDs
             .map(tag => tag.photoID)
             // Converts array of photoIDs into an array of photo objects
