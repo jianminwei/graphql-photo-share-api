@@ -1,5 +1,5 @@
 {
-  "name": "photo-share-api",
+  "name": "photo-share-api2",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,7 +10,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "apollo-server": "^2.5.0",
+    "apollo-server-express": "^2.5.0",
+    "express": "^4.16.4",
     "graphql": "^14.3.0",
     "nodemon": "^1.19.0"
   }
