@@ -6,6 +6,9 @@ const typeDefs = readFileSync('./typeDefs.graphql', 'UTF-8')
 //const {resolvers} = require('./resolvers/index.js')
 const { GraphQLScalarType } = require('graphql')
 
+const { MongoClient } = require('mongodb')
+require('dotenv').config()
+
 var users = [
     { "githubLogin": "mHattrup", "name": "Mike Hattrup" },
     { "githubLogin": "gPlake", "name": "Glen Plake" },
@@ -101,22 +104,32 @@ const resolvers = {
     })
 }
 
-// Call `express()` to create an Express application
-var app = express()
+// 1. Create Asynchronous Function
+async function start() {
+    const app = express()
+    const MONGO_DB = process.env.DB_HOST
 
-// Create a new instance of the server.
-// Send it an object with typeDefs (the schema) and resolvers
-const server = new ApolloServer({ typeDefs, resolvers })
+    const client = await MongoClient.connect(
+        MONGO_DB,
+        { useNewUrlParser: true }
+    )
 
-// Call `applyMiddleware()` to allow middleware mounted on the same path
-server.applyMiddleware({ app })
+    const db = client.db()
+    const context = { db }
+    const server = new ApolloServer({ typeDefs, resolvers, context })
 
-// Create a home route
-app.get('/', (req, res) => res.end('Welcome to the PhotoShare API'))
+    server.applyMiddleware({ app })
 
-app.get('/playground', expressPlayground({ endpoint: '/graphql' }))
+    app.get('/', (req, res) => res.end('Welcome to the PhotoShare API'))
 
-// Listen on a specific port
-app.listen({ port: 4000 }, () =>
-    console.log(`GraphQL Server running @http://localhost:4000${server.graphqlPath}`)
-)
+    app.get('/playground', expressPlayground({ endpoint: '/graphql' }))
+
+    app.listen({ port: 4000 }, () =>
+        console.log(
+            `GraphQL Server running at http://localhost:4000${server.graphqlPath}`
+        )
+    )
+}
+
+// 5. Invoke start when ready to start
+start()
