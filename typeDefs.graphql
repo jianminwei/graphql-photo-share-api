@@ -33,6 +33,7 @@ type User {
 type Query {
     totalPhotos: Int!
     allPhotos: [Photo!]!
+    totalUsers: Int!
     allUsers: [User!]!
 }
 
