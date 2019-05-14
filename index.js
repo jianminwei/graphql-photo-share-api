@@ -31,13 +31,41 @@ const resolvers = {
     },
 
     Mutation: {
-        async postPhoto(parent, args, { db}) {
-            let {id} = await db.collection("photos")
-                .find().sort({id:-1}).limit(1).toArray()[0];
+        postPhoto(parent, args, { db, getSequence }) {
+
+            /****************************************************
+             * Post a new photo syntax:
+             * 
+                mutation newPhoto($input: PostPhotoInput!) {
+                postPhoto(input: $input) {
+                    name
+                    url
+                    description
+                    category
+                    postedBy{
+                        githubLogin
+                        name
+                    }
+                    taggedUsers {
+                        name
+                    }
+                  }
+                }
+
+                *** Query Variable ***
+                {
+                    "input": {
+                        "name": "React workshop",
+                        "description": "Photo taked at react workshop",
+                        "githubUser": "sSchmidt"
+                    }
+                }                
+
+             ****************************************************/
 
             var newPhoto = {
-                id: ++id,
                 ...args.input,
+                taggedUsers:[],
                 created: new Date()
             }
 
@@ -90,6 +118,7 @@ async function start() {
     )
 
     const db = client.db()
+
     const context = { db }
     const server = new ApolloServer({ typeDefs, resolvers, context })
 
