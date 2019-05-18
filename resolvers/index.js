@@ -1,4 +1,5 @@
 const { GraphQLScalarType } = require('graphql')
+const { authorizeWithGithub } = require('../lib')
 
 const resolvers = {
     Query: {
@@ -62,7 +63,60 @@ const resolvers = {
 
             db.collection("photos").insertOne(newPhoto)
             return newPhoto
-        }
+        },
+
+        async githubAuth(parent, { code }, { db }) {
+
+            /*********************************************
+             * You can test this mutation with below:
+             * Note: the code has to be a newly obtained code each time:
+             *       1.Use this link: https://github.com/login/oauth/authorize?client_id=<client_id>&scope=user
+             *       2. Github will ask authorize
+             *       3. After step 2, github will return a url with code.
+             *       4. Use below mutation query.
+             * 
+            
+             mutation {
+                githubAuth(code: "7a18473821138800d22f") {
+                    token
+                    user {
+                        githubLogin
+                        name
+                        avatar
+                    }
+                }
+            }
+            ************************************************/
+
+            let {
+              message,
+              access_token,
+              avatar_url,
+              login,
+              name
+            } = await authorizeWithGithub({
+              client_id: process.env.CLIENT_ID,
+              client_secret: process.env.CLIENT_SECRET,
+              code
+            })
+      
+            if (message) {
+              throw new Error(message)
+            }
+      
+            let latestUserInfo = {
+              name,
+              githubLogin: login,
+              githubToken: access_token,
+              avatar: avatar_url
+            }
+      
+            const { ops:[user] } = await db
+              .collection('users')
+              .replaceOne({ githubLogin: login }, latestUserInfo, { upsert: true })
+      
+            return { user, token: access_token }
+          },        
     },
 
     Photo: {

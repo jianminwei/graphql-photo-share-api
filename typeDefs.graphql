@@ -43,8 +43,15 @@ input PostPhotoInput {
     githubUser: String!
 }
 
+type AuthPayload {
+   token: String!
+   user: User!
+}
+
 # 3. Return the newly posted photo from the mutation
 type Mutation {
     postPhoto(input: PostPhotoInput!): Photo!
+    githubAuth(code: String!): AuthPayload!
 }
+
 
