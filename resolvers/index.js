@@ -1,8 +1,11 @@
 const { GraphQLScalarType } = require('graphql')
 const { authorizeWithGithub } = require('../lib')
+const fetch = require('node-fetch')
 
 const resolvers = {
     Query: {
+        me: (parent, args, { currentUser }) => currentUser,
+
         totalPhotos: (parent, args, { db }) =>
             db.collection('photos')
                 .estimatedDocumentCount(),
@@ -23,45 +26,50 @@ const resolvers = {
     },
 
     Mutation: {
-        postPhoto(parent, args, { db, getSequence }) {
+        /****************************************************
+         * Post a new photo syntax:
+         * 
+        mutation newPhoto($input: PostPhotoInput!) {
+        postPhoto(input: $input) {
+            name
+            url
+            description
+            category
+            postedBy{
+                githubLogin
+                name
+            }
+            taggedUsers {
+                name
+            }
+            }
+        }
 
-            /****************************************************
-             * Post a new photo syntax:
-             * 
-                mutation newPhoto($input: PostPhotoInput!) {
-                postPhoto(input: $input) {
-                    name
-                    url
-                    description
-                    category
-                    postedBy{
-                        githubLogin
-                        name
-                    }
-                    taggedUsers {
-                        name
-                    }
-                  }
-                }
+        *** Query Variable ***
+        {
+            "input": {
+                "name": "React workshop",
+                "description": "Photo taked at react workshop",
+                "githubUser": "sSchmidt"
+            }
+        }                
 
-                *** Query Variable ***
-                {
-                    "input": {
-                        "name": "React workshop",
-                        "description": "Photo taked at react workshop",
-                        "githubUser": "sSchmidt"
-                    }
-                }                
-
-             ****************************************************/
-
-            var newPhoto = {
+        ****************************************************/
+        async postPhoto(parent, args, { db, currentUser }) {
+            // 1. If there is not a user in context, throw an error
+            if (!currentUser) {
+                throw new Error('only an authorized user can post a photo')
+            }
+            // 2. Save the current user's id with the photo
+            const newPhoto = {
                 ...args.input,
-                taggedUsers:[],
+                taggedUsers: [],
+                userID: currentUser.githubLogin,
                 created: new Date()
             }
-
-            db.collection("photos").insertOne(newPhoto)
+            // 3. Insert the new photo, capture the id that the database created
+            const { insertedIds } = await db.collection('photos').insert(newPhoto)
+            newPhoto.id = insertedIds[0]
             return newPhoto
         },
 
@@ -105,7 +113,7 @@ const resolvers = {
             }
       
             let latestUserInfo = {
-              name,
+              name: name,
               githubLogin: login,
               githubToken: access_token,
               avatar: avatar_url
@@ -116,11 +124,26 @@ const resolvers = {
               .replaceOne({ githubLogin: login }, latestUserInfo, { upsert: true })
       
             return { user, token: access_token }
-          },        
+          },     
+          
+        addFakeUsers: async (root, { count }, { db }) => {
+            var randomUserApi = `https://randomuser.me/api/?results=${count}`
+            var { results } = await fetch(randomUserApi)
+                .then(res => res.json())
+            var users = results.map(r => ({
+                githubLogin: r.login.username,
+                name: `${r.name.first} ${r.name.last}`,
+                avatar: r.picture.thumbnail,
+                githubToken: r.login.sha1
+            }))
+            await db.collection('users').insert(users)
+            return users
+        }          
     },
 
     Photo: {
-        url: parent => `http://yoursite.com/img/${parent.id}.jpg`,
+        id: parent => parent.id || parent._id,
+        url: parent => `http://yoursite.com/img/${parent._id}.jpg`,
         postedBy: (parent, args, { db }) => 
             db.collection('users')
             .findOne({githubLogin: parent.githubUser}),

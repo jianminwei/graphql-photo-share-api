@@ -26,8 +26,10 @@ const requestGithubUserAccount = token =>
         .then(res => res.json())
         
 const authorizeWithGithub = async credentials => {
+    //Note: below directly destructuring props from the await function, amazing.
     const { access_token } = await requestGithubToken(credentials)
     const githubUser = await requestGithubUserAccount(access_token)
+    //console.log(githubUser)
     return { ...githubUser, access_token }
 }
 

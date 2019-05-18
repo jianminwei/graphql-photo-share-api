@@ -11,6 +11,7 @@ enum PhotoCategory {
 
 # 1. Add Photo type definition
 type Photo {
+    id: ID
     url: String!
     name: String!
     description: String
@@ -30,6 +31,7 @@ type User {
 
 # 2. Return Photo from allPhotos
 type Query {
+    me: User
     totalPhotos: Int!
     allPhotos: [Photo!]!
     totalUsers: Int!
@@ -52,6 +54,7 @@ type AuthPayload {
 type Mutation {
     postPhoto(input: PostPhotoInput!): Photo!
     githubAuth(code: String!): AuthPayload!
+    addFakeUsers(count: Int = 1): [User!]
 }
 
 
